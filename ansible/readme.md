@@ -1,0 +1,2 @@
+- [Ansible playbook to create agent-based OpenShift Installer configuration YAMLs](openshift-agent-install-config.md)
+- [Ansible playbook to create custome CoreOS installer ISO image](openshift-create-node-iso-image.md)

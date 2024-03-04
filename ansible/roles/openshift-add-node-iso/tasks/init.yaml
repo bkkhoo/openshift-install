@@ -1,0 +1,11 @@
+---
+- name: Ensure temp staging directory exist
+  register: _staging_dir
+  ansible.builtin.tempfile:
+    prefix: temp-staging-
+    state: directory
+
+- name: Set staging_dir
+  ansible.builtin.set_fact:
+    staging_dir: "{{ _staging_dir.path }}"
+...

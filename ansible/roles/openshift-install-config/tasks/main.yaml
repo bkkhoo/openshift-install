@@ -1,0 +1,24 @@
+---
+- name: assert one or more master node
+  vars:
+    master_count: "{{ _config['hosts'] | selectattr('role', '==', 'master') | length }}"
+  ansible.builtin.assert:
+    that:
+      - (master_count | int) > 0
+    fail_msg: "cluster config must have one or more master hosts"
+    success_msg: "cluster config has one or more master hosts"
+
+- name: create install-config.yaml
+  vars:
+    _control_replicas: "{{ _config.hosts | selectattr('role', '==', 'master') | length }}"
+    _compute_replicas: "{{ _config.hosts | selectattr('role', '==', 'worker') | length }}"
+    _ssh_key: "{{ lookup('ansible.builtin.file', _config['sshKey']) }}"
+    _pull_secret: "{{ lookup('ansible.builtin.file', _config['pullSecret']) | to_json }}"
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.template', 'install-config.yaml.j2') }}"
+    dest: "{{ lookup('ansible.builtin.env', 'PWD') }}/install-config.yaml"
+
+- name: create agent-config.yaml
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.template', 'agent-config.yaml.j2') }}"
+    dest: "{{ lookup('ansible.builtin.env', 'PWD') }}/agent-config.yaml"

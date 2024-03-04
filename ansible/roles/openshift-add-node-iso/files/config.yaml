@@ -1,0 +1,3 @@
+copy-network: true
+insecure: true
+insecure-ignition: true

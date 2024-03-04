@@ -1,0 +1,26 @@
+interfaces:
+{% for interface in _interfaces %}
+  - name: {{ interface["name"] }}
+    type: ethernet
+    state: up
+    mac-address: {{ interface["mac-address"] }}
+    ipv4:
+      enabled: true
+      dhcp: false
+      address:
+        - ip: {{ interface["ip"] }}
+          prefix-length: {{ interface["prefix-length"] }}
+{% endfor %}
+
+dns-resolver:
+  config:
+    server: {{ _dns_servers }}
+
+routes:
+  config:
+{% for route in _routes %}
+    - destination: {{ route.destination }}
+      next-hop-address: {{ route["next-hop-address"] }}
+      next-hop-interface: {{ route["next-hop-interface"] }}
+      table-id: 254
+{% endfor %}

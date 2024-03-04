@@ -1,0 +1,6 @@
+---
+- name: ensure temp staging directory does not exist
+  ansible.builtin.file:
+    state: absent
+    dest: "{{ staging_dir }}"
+...

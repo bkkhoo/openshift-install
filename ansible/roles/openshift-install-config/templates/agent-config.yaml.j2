@@ -1,0 +1,39 @@
+apiVersion: v1alpha1
+kind: AgentConfig
+metadata:
+  name: {{ _config['clusterName'] }}
+rendezvousIP: {{ (_config['hosts'] | selectattr('role', '==', 'master') | map(attribute='interfaces.0.ip'))[0] }}
+hosts:
+{% for host in _config['hosts'] %}
+  - role: {{ host['role'] }}
+    interfaces:
+{% for int in host['interfaces'] %}
+      - name: {{ int['name'] }}
+        macAddress: {{ int['mac-address'] }}
+{% endfor %}
+    networkConfig:
+      interfaces:
+{% for int in host['interfaces'] %}
+        - name: {{ int['name'] }}
+          type: ethernet
+          state: up
+          mac-address: {{ int['mac-address'] }}
+          ipv4:
+            enabled: true
+            dhcp: {{ int['dhcp'] }}
+            address:
+              - ip: {{ int['ip'] }}
+                prefix-length: {{ int['prefix-length'] }}
+{% endfor %}
+      dns-resolver:
+        config:
+          server: {{ _config['dnsServers'] }}
+      routes:
+        config:
+{% for route in _config['routes'] %}
+          - destination: {{ route['destination'] }}
+            next-hop-address: {{ route['next-hop-address'] }}
+            next-hop-interface: {{ route['next-hop-interface'] }}
+            table-id: 254
+{% endfor %}
+{% endfor %}

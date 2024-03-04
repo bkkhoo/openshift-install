@@ -1,0 +1,69 @@
+baseDomain: private.org
+clusterName: bkhoo-sno
+
+clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+serviceNetwork:
+  - 172.30.0.0/16
+machineNetwork:
+  - cidr: 172.16.186.0/23
+
+# proxy:
+#   httpsProxy: http://proxy.lab.private.org:3128
+#   httpProxy: http://proxy.lab.private.org:3128
+#   noProxy: .private.org,192.168.0.0/16
+
+# path to private ca bundle in PEM format
+additionalTrustBundle: ~/private-ca.crt
+
+# path to redhat image pull secret file
+pullSecret: ~/pull-secret.json
+
+# path to ssh public key file
+sshKey: ~/.ssh/id_rsa.pub
+
+# the disk device to install rhcos
+installDevice: /dev/nvme0n1
+
+# get the urls to download rhcos image from:
+# openshift-install coreos print-stream-json | jq -r .architectures[].artifacts.metal.formats.iso.disk.location
+rhcosLiveIso: /tmp/rhcos-414.92.202310210434-0-live.x86_64.iso
+
+# directory to store custom iso files
+customISODir: /tmp/isos
+
+# dns servers
+dnsServers:
+  - 172.16.187.8
+
+# static routes
+routes:
+  - destination: 0.0.0.0/0
+    next-hop-address: 172.16.186.2
+    next-hop-interface: ens160
+  - destination: 16.1.1.0/24
+    next-hop-address: 172.16.1.254
+    next-hop-interface: ens224
+
+# list of nodes
+hosts:
+  # - role: master
+  #   interfaces:         # interfaces of the worker node
+  #     - name: ens160    # this must be the actual interface name
+  #       mac-address: 00:50:56:AA:BB:38
+  #       dhcp: false
+  #       ip: 172.16.187.38
+  #       prefix-length: 23
+  - role: worker
+    interfaces:         # interfaces of the worker node
+      - name: ens160    # this must be the actual interface name
+        mac-address: 00:50:56:AA:DD:99
+        dhcp: false
+        ip: 172.16.187.99
+        prefix-length: 23
+      - name: ens224
+        mac-address: 00:50:56:AA:EE:99
+        dhcp: false
+        ip: 172.16.1.99
+        prefix-length: 24

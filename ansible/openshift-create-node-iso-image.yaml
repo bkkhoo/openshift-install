@@ -1,0 +1,37 @@
+# ansible-playbook openshift-create-node-iso-image.yaml -e cluster_config=cluster-config.yaml
+#
+# expects these additional extra_vars:
+#   cluster_config - yaml config file for the cluster
+#
+---
+- name: create custom coreos live iso image
+  hosts: localhost
+  gather_facts: false
+  become: false
+  # vars_files:
+  #   - host-list.yaml
+
+  tasks:
+    - name: assert that cluster config file is provided
+      ansible.builtin.assert:
+        that:
+          - cluster_config is defined
+          - cluster_config != ""
+        fail_msg: "cluster_config variable is not set; please run ansible-playbook with '-e cluster_config=<path-to-cluster-config-yaml-file>' option"
+        success_msg: "cluster config yaml file provided"
+
+    - name: ensure coreos-installer utility exist
+      ansible.builtin.command: which coreos-installer
+
+    - name: extract worker ignition data
+      register: user_data
+      ansible.builtin.command:
+        oc -n openshift-machine-api extract secret/worker-user-data --keys=userData --to=-
+
+    - name: create custom coreos live iso image
+      vars:
+        _config: "{{ lookup('ansible.builtin.file', cluster_config) | from_yaml }}"
+        _ignition: "{{ user_data['stdout'] | from_json | combine({'test': 'test'}) }}"
+      ansible.builtin.include_role:
+        name: openshift-add-node-iso
+...

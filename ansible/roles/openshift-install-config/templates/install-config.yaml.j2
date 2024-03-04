@@ -1,0 +1,37 @@
+apiVersion: v1
+baseDomain: {{ _config['baseDomain'] }}
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: {{ _control_replicas }}
+compute:
+  - hyperthreading: Enabled
+    name: worker
+    replicas: {{ _compute_replicas }}
+metadata:
+  name: {{ _config['clusterName'] }}
+networking:
+  clusterNetwork: {{ _config['clusterNetwork'] }}
+  serviceNetwork: {{ _config['serviceNetwork'] }}
+  machineNetwork: {{ _config['machineNetwork'] }}
+  networkType: OVNKubernetes
+platform:
+  none: {}
+{% if _config['proxy'] is defined %}
+proxy:
+{% if _config['proxy']['httpsProxy'] is defined and _config['proxy']['httpsProxy'] != "" %}
+  httpsProxy: {{ _config['proxy']['httpsProxy'] }}
+{% endif %}
+{% if _config['proxy']['httpProxy'] is defined and _config['proxy']['httpProxy'] != "" %}
+  httpProxy: {{ _config['proxy']['httpProxy'] }}
+{% endif %}
+{% if _config['proxy']['noProxy'] is defined and _config['proxy']['noProxy'] != "" %}
+  noProxy: {{ _config['proxy']['noProxy'] }}
+{% endif %}
+{% endif %}
+{% if _config['additionalTrustBundle'] is defined and _config['additionalTrustBundle'] != "" %}
+additionalTrustBundle: |
+  {{ lookup('ansible.builtin.file', _config['additionalTrustBundle']) | indent( width=2, first=false) }}
+{% endif %}
+pullSecret: {{ _pull_secret }}
+sshKey: {{ _ssh_key }}

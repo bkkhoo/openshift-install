@@ -1,0 +1,67 @@
+---
+- name: ensure staging directory exist
+  ansible.builtin.import_tasks: init.yaml
+
+- name: initialize variable
+  ansible.builtin.set_fact:
+    custom_iso_names: []
+
+- name: block with always
+  block:
+    - name: copy coreos-installer config file
+      ansible.builtin.copy:
+        src: config.yaml
+        dest: "{{ staging_dir }}/config.yaml"
+
+    - name: read ssh public key
+      when:
+        - _config['sshKey'] is defined
+        - _config['sshKey'] != ""
+      ansible.builtin.set_fact:
+        ssh_key: "{{ lookup('ansible.builtin.file', _config['sshKey']) }}"
+
+    - name: set ssh ssh authorized keys
+      ansible.builtin.set_fact:
+        ssh_authorized_keys:
+          passwd:
+            users:
+              - name: core
+                sshAuthorizedKeys:
+                  - "{{ ssh_key }}"
+
+    - name: create custom worker ignition
+      ansible.builtin.set_fact:
+        custom_ignition: "{{ _ignition | combine(ssh_authorized_keys) }}"
+
+    - name: write custom worker ignition file
+      ansible.builtin.copy:
+        content: "{{ custom_ignition }}"
+        dest: "{{ staging_dir }}/custom.ign"
+
+    - name: ensure output directory exist
+      ansible.builtin.file:
+        path: "{{ _config['customISODir'] }}"
+        state: directory
+
+    - name: create custom rhcos iso image
+      loop: "{{ _config['hosts'] }}"
+      vars:
+        _interfaces: "{{ item.interfaces }}"
+        _routes: "{{ _config['routes'] }}"
+        _dns_servers: "{{ _config['dnsServers'] }}"
+        _config_file: "{{ staging_dir }}/config.yaml"
+        _nmstate_file: "{{ staging_dir }}/int.connection"
+        _ignition_file: "{{ staging_dir }}/custom.ign"
+        _install_device: "{{ _config['installDevice'] }}"
+        _rhcos_live_iso: "{{ _config['rhcosLiveIso'] }}"
+        _custom_iso_dir: "{{ _config['customISODir'] }}"
+        _worker_rhcos_iso: "rhcos-live-{{ item['interfaces'][0]['mac-address'] | lower | replace(':', '-') }}.iso"
+      ansible.builtin.include_tasks: rhcos-image.yaml
+
+    - ansible.builtin.debug:
+        msg: "the following rhcos live iso image created: {{ custom_iso_names | join(', ') }}"
+
+  always:
+    - name: ensure staging directory is deleted
+      ansible.builtin.import_tasks: clean-up.yaml
+...

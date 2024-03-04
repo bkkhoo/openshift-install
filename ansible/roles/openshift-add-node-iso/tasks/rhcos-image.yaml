@@ -1,0 +1,24 @@
+- name: create nmstate file
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.template', 'nmstate.j2') }}"
+    dest: "{{ _nmstate_file }}"
+
+- name: ensure iso file does not exist
+  ansible.builtin.file:
+    path: "{{ _custom_iso_dir }}/{{ _worker_rhcos_iso }}"
+    state: absent
+
+- name: create custom rhcos live iso image
+  ansible.builtin.command: |
+    coreos-installer iso customize \
+      --force \
+      --installer-config {{ _config_file }} \
+      --network-nmstate {{ _nmstate_file }} \
+      --dest-ignition {{ _ignition_file }} \
+      --dest-device {{ _install_device }} \
+      --output {{ _custom_iso_dir }}/{{ _worker_rhcos_iso }} \
+      {{ _rhcos_live_iso }}
+
+- name: store live iso file names
+  ansible.builtin.set_fact:
+    custom_iso_names: "{{ custom_iso_names + [_worker_rhcos_iso] }}"
