@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: etcd-backup
+              env:
+                - name: BACKUP_PATH
+                  value: /home/etcd-backup/dev-cluster

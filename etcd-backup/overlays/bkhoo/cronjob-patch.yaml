@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: etcd-backup
+              env:
+                - name: BACKUP_PATH
+                  value: /home/lab-user/etcd-backup/dev-cluster
+                - name: SFTP_SERVER
+                  value: ssh.ocpv01.dal10.infra.demo.redhat.com
+                - name: SFTP_PORT
+                  value: "-P 32154"
