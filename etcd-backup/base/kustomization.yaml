@@ -7,12 +7,15 @@ generatorOptions:
   disableNameSuffixHash: true
 
 resources:
-  - configmap.yaml
-  - secret.yaml
   - rbac.yaml
   - cronjob.yaml
 
-# secretGenerator:
-# - name: private-ca
-#   files:
-#   - ca.pem
+configMapGenerator:
+- name: backup-script
+  files:
+  - etcd-backup.sh
+
+secretGenerator:
+- name: ssh-key
+  files:
+  - ssh-key
