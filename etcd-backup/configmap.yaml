@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-script
+  namespace: etcd-backup
+data:
+  etcd-backup.sh: |
+    #!/bin/bash
+
+    # sftp server config
+    SFTP_SERVER="ssh.ocpv01.dal10.infra.demo.redhat.com"
+    SFTP_PORT="-P 32154"
+    SFTP_USERNAME="lab-user"
+    SSH_OPTIONS="-o StrictHostKeyChecking=no"   # ssh option; note this is insecure, mount known_hosts if need secure
+
+    # this is mounted from openshift secret
+    SSH_PRIVATE_KEY="/etcd-backup/ssh-rsa-key"
+
+    # the same file in chroot and container filesystem
+    CHROOT_SSH_PRIVATE_KEY="/tmp/ssh-rsa-key"
+    HOST_SSH_PRIVATE_KEY="/host$CHROOT_SSH_PRIVATE_KEY"
+
+    # the same file in chroot and container filesystem
+    CHROOT_SFTP_BATCHFILE="/tmp/sft-batchfile"
+    HOST_SFTP_BATCHFILE="/host$CHROOT_SFTP_BATCHFILE"
+
+    # the same file in chroot and container filesystem
+    CHROOT_SOURCE_FOLDER="/home/core/assets/backup"
+    HOST_SOURCE_FOLDER="/host$CHROOT_SOURCE_FOLDER"
+
+    # folder on sftp server
+    DEST_FOLDER="/home/lab-user/etcd-backup"
+
+    # backup etcd database; the command run under chroot
+    chroot /host /usr/local/bin/cluster-backup.sh $CHROOT_SOURCE_FOLDER
+
+    # get name of files created by cluster-backup.sh script
+    backup_files=$(ls -1 $HOST_SOURCE_FOLDER)
+
+    # create a sftp batchfile
+    rm -f $HOST_SFTP_BATCHFILE
+    for f in $(ls -1 $HOST_SOURCE_FOLDER); do
+      echo "put $CHROOT_SOURCE_FOLDER/$f $DEST_FOLDER" >> $HOST_SFTP_BATCHFILE
+    done
+
+    # make sure $SSH_PRIVATE_KEY is available in chroot
+    cp $SSH_PRIVATE_KEY $HOST_SSH_PRIVATE_KEY
+    chmod 400 $HOST_SSH_PRIVATE_KEY
+
+    # transfer backup files to sftp server; the command run under chroot
+    chroot /host sftp -i $CHROOT_SSH_PRIVATE_KEY -b $CHROOT_SFTP_BATCHFILE $SFTP_PORT $SFTP_USERNAME@$SFTP_SERVER
+
+    # clean up
+    rm -rf $HOST_SOURCE_FOLDER $HOST_SFTP_BATCHFILE $HOST_SSH_PRIVATE_KEY
