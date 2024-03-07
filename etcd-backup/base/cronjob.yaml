@@ -1,3 +1,4 @@
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -38,8 +39,8 @@ spec:
               image: registry.redhat.io/rhel-minimal:latest
               imagePullPolicy: IfNotPresent
               env:
-                - name: BACKUP_STORE
-                  value: /home/etcd-backup/cluster
+                - name: BACKUP_PATH
+                  value: /opt/etcd-backup/cluster
               command:
                 - /bin/sh
                 - -c
@@ -63,3 +64,4 @@ spec:
                 - name: backup-script
                   mountPath: /etcd-backup/etcd-backup.sh
                   subPath: etcd-backup.sh
+...

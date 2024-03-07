@@ -1,3 +1,4 @@
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -11,4 +12,15 @@ spec:
             - name: etcd-backup
               env:
                 - name: BACKUP_PATH
-                  value: /home/etcd-backup/uat-cluster
+                  value: /opt/etcd-backup/dev-cluster
+                # the values for the following environment variables are default in the script, no need to explicitly set
+                # only need to explicitly set environment variable if using non-default value
+                # - name: SFTP_SERVER
+                #   value: 10.66.202.107
+                # - name: SFTP_PORT
+                #   value: "-P 22"
+                # - name: SFTP_USERNAME
+                #   value: "etcd-backup"
+                # - name: SSH_OPTIONS
+                #   value: "-o StrictHostKeyChecking=no"
+...

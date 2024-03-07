@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -11,3 +12,4 @@ patches:
       kind: CronJob
       name: etcd-backup
    path: cronjob-patch.yaml
+...

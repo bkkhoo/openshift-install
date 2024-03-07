@@ -1,4 +1,14 @@
 #!/bin/bash
+#
+# the script is designed to run as a cronJob in openshift cluster, it:
+# 1. backups etcd data
+# 2. transfers backup files (snopshot db and static resources) to a sftp server
+#
+# expects the following environment variables:
+#   SFTP_SERVER - ip/hostname of sftp server; default 10.66.202.107
+#   SFTP_PORT   - sftp/ssh port; default '-P 22'
+#   SFTP_USERNAME - username to login to sftp serevr; default 'etcd-backup'
+#   SSH_OPTIONS   - sftp/ssh options; default '-o StrictHostKeyChecking=no'
 
 # sftp server config
 _SFTP_SERVER="${SFTP_SERVER:-10.66.202.107}"
@@ -41,6 +51,9 @@ chmod 400 $HOST_SSH_PRIVATE_KEY
 
 # transfer backup files to sftp server; the command run under chroot
 chroot /host sftp -i $CHROOT_SSH_PRIVATE_KEY $_SSH_OPTIONS -b $CHROOT_SFTP_BATCHFILE $_SFTP_PORT $_SFTP_USERNAME@$_SFTP_SERVER
+
+cat $HOST_SFTP_BATCHFILE
+echo "$CHROOT_SSH_PRIVATE_KEY $_SSH_OPTIONS -b $CHROOT_SFTP_BATCHFILE $_SFTP_PORT $_SFTP_USERNAME@$_SFTP_SERVER"
 
 # clean up
 rm -rf $HOST_SOURCE_FOLDER $HOST_SFTP_BATCHFILE $HOST_SSH_PRIVATE_KEY
