@@ -1,0 +1,25 @@
+# for openshift v4.13 and above:
+#  https://access.redhat.com/solutions/7028415
+#
+# for openshift v4.12 and below:
+#  https://access.redhat.com/solutions/5138901
+#
+variant: openshift
+version: 4.14.0    # the .z part is always 0
+metadata:
+  name: 49-master-sshd-crypto
+  labels:
+    machineconfiguration.openshift.io/role: master
+storage:
+  files:
+  - path: /etc/ssh/sshd_config.d/49-sshd-crypto.conf
+    mode: 0600
+    overwrite: true
+    contents:
+      inline: |
+        Ciphers aes256-gcm@openssh.com,aes256-ctr,aes128-gcm@openssh.com,aes128-ctr
+        MACs umac-128-etm@openssh.com,hmac-sha2-256,hmac-sha1,umac-128@openssh.com,hmac-sha2-512
+
+# default Cipher and MACs as configured in /etc/crypto-policies/back-ends/opensshserver.config
+# Ciphers aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,aes256-ctr,aes128-gcm@openssh.com,aes128-ctr
+# MACs hmac-sha2-256-etm@openssh.com,hmac-sha1-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha1,umac-128@openssh.com,hmac-sha2-512
